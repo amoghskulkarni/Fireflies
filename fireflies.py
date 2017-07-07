@@ -57,7 +57,7 @@ class FirefliesSimulation:
             yield self.simpy_env.process(self.__firefly(x, y))
 
     def __firefly(self, x, y):
-        # Light up for the first time
+        # Light up
         self.__light_up_firefly(self.space, x, y)
         pygame.display.update()
 
@@ -68,6 +68,7 @@ class FirefliesSimulation:
         self.__turn_off_firefly(self.space, x, y)
         pygame.display.update()
 
+        # Wait for the longer duration (period)
         yield self.simpy_env.timeout(self.p)
 
     # Private method to light up the firefly
