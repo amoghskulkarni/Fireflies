@@ -38,7 +38,7 @@ class FirefliesSimulation:
         self.simpy_env = simpy.rt.RealtimeEnvironment(factor=0.1)
         for x, y in self.fireflies_positions:
             random_start = randint(1, period)
-            self.simpy_env.process(self.__firefly(x, y, random_start))
+            self.simpy_env.process(self.__firefly_control(x, y, random_start))
 
         # Initialize the neighbors dictionary
         for x1, y1 in self.fireflies_positions:
@@ -49,25 +49,26 @@ class FirefliesSimulation:
                     else:
                         self.neighbors[(x1, y1)] = [(x2, y2)]
 
-        print self.neighbors
-
-    def __firefly(self, x, y, init):
+    def __firefly_control(self, x, y, init):
         # Every firefly waits for random duration
         yield self.simpy_env.timeout(init)
 
         while True:
-            # Light up for the first time
-            self.__light_up_firefly(self.space, x, y)
-            pygame.display.update()
+            yield self.simpy_env.process(self.__firefly(x, y))
 
-            # Wait for a brief duration (blink)
-            yield self.simpy_env.timeout(self.blink_duration)
+    def __firefly(self, x, y):
+        # Light up for the first time
+        self.__light_up_firefly(self.space, x, y)
+        pygame.display.update()
 
-            # Turn off the light
-            self.__turn_off_firefly(self.space, x, y)
-            pygame.display.update()
+        # Wait for a brief duration (blink)
+        yield self.simpy_env.timeout(self.blink_duration)
 
-            yield self.simpy_env.timeout(self.p)
+        # Turn off the light
+        self.__turn_off_firefly(self.space, x, y)
+        pygame.display.update()
+
+        yield self.simpy_env.timeout(self.p)
 
     # Private method to light up the firefly
     @staticmethod
