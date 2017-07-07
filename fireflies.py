@@ -17,7 +17,8 @@ class FirefliesSimulation:
         self.canvas_width = 800                 # Default is 800
         self.nudge = nudge
         self.neighbor_distance = neighbor_distance
-        self.processes = {}
+        self.message_pipes = {}
+        self.messages = {}
         self.next_blink_at = {}
         self.neighbors = {}
 
@@ -39,24 +40,40 @@ class FirefliesSimulation:
         for x, y in self.fireflies_positions:
             random_start = randint(1, period)
             self.simpy_env.process(self.__firefly_control(x, y, random_start))
+            self.message_pipes[(x, y)] = simpy.Store(self.simpy_env)
+            self.messages[(x, y)] = 0
 
         # Initialize the neighbors dictionary
+        for x, y in self.fireflies_positions:
+            self.neighbors[(x, y)] = []
         for x1, y1 in self.fireflies_positions:
             for x2, y2 in self.fireflies_positions:
                 if (x1, y1) != (x2, y2) and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
-                    if (x1, y1) in self.neighbors:
-                        self.neighbors[(x1, y1)].append((x2, y2))
-                    else:
-                        self.neighbors[(x1, y1)] = [(x2, y2)]
+                    self.neighbors[(x1, y1)].append((x2, y2))
 
     def __firefly_control(self, x, y, init):
         # Every firefly waits for random duration
-        yield self.simpy_env.timeout(init)
+        yield self.simpy_env.process(self.__firefly(x, y, init))
+        self.next_blink_at[(x, y)] = self.simpy_env.now + self.p
 
         while True:
-            yield self.simpy_env.process(self.__firefly(x, y))
+            firefly_blink = self.simpy_env.process(self.__firefly(x, y, self.next_blink_at[(x, y)] - self.simpy_env.now))
+            yield self.message_pipes[(x, y)].get() | firefly_blink
+            if self.message_pipes[(x, y)].items > 0:
+                # If the event is triggered, nudge the clock, create another event
+                # And set the next_blink at (next_blink - nudge)
+                for i in range(len(self.message_pipes[(x, y)].items)):
+                    flush = self.message_pipes[(x, y)].get()
+                    if self.next_blink_at[(x, y)] - self.nudge > self.simpy_env.now:
+                        self.next_blink_at[(x, y)] -= self.nudge
 
-    def __firefly(self, x, y):
+            if firefly_blink.triggered:
+                self.next_blink_at[(x, y)] = self.simpy_env.now + self.p
+
+    def __firefly(self, x, y, wait):
+        # Wait for the longer duration (period)
+        yield self.simpy_env.timeout(wait)
+
         # Light up
         self.__light_up_firefly(self.space, x, y)
         pygame.display.update()
@@ -68,8 +85,10 @@ class FirefliesSimulation:
         self.__turn_off_firefly(self.space, x, y)
         pygame.display.update()
 
-        # Wait for the longer duration (period)
-        yield self.simpy_env.timeout(self.p)
+        # Trigger the events of neighbors
+        for neighbor in self.neighbors[(x, y)]:
+            self.message_pipes[neighbor].put(self.messages[neighbor])
+            self.messages[neighbor] += 1
 
     # Private method to light up the firefly
     @staticmethod

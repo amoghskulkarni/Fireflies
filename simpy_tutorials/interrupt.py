@@ -16,14 +16,13 @@ class EV:
 
             # Park for 1 hour
             print('Start parking at', env.now)
-            # self.charging = env.process(self.bat_ctrl(env))
-            yield env.process(self.bat_ctrl(env))
+            charging = env.process(self.bat_ctrl(env))
+            parking = env.timeout(60)
+            yield charging | parking
             print "2", env.now
-            # self.parking = env.timeout(60)
-            # yield self.charging | self.parking
-            # if not self.charging.triggered:
+            if not charging.triggered:
                 # Interrupt charging if not already done.
-                # self.charging.interrupt('Need to go!')
+                charging.interrupt('Need to go!')
             print('Stop parking at', env.now)
 
     def bat_ctrl(self, env):
