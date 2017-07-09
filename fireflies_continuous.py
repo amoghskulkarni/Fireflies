@@ -2,6 +2,7 @@ import pygame
 from random import sample, randint, randrange
 from math import sqrt
 from time import sleep
+from numpy import mean, std
 
 const_black = (0, 0, 0)
 const_white = (255, 255, 255)
@@ -51,11 +52,13 @@ class FirefliesSimulation:
 
     # Private method to update firefly clocks
     def __update_firefly_clocks(self):
+        flash_counter = 0
         for x, y in self.fireflies_positions:
             # Increment the clock
             self.fireflies_clocks[(x, y)] += 1
             # If the firefly's clock reached period, it's time to shine
             if self.fireflies_clocks[(x, y)] > self.p:
+                flash_counter += 1
                 # Spread the light (will be turned off outside this function)
                 self.__light_up_firefly(self.space, x, y)
 
@@ -70,7 +73,12 @@ class FirefliesSimulation:
 
                 # Reset the clock
                 self.fireflies_clocks[(x, y)] = 0
+
+            if self.fireflies_clocks[(x, y)] < 0:
+                self.fireflies_clocks[(x, y)] = 0
+
         pygame.display.update()
+        return flash_counter
 
     # Private method to light up the firefly
     @staticmethod
@@ -87,21 +95,30 @@ class FirefliesSimulation:
                 game_display.set_at((abs(x), abs(y)), const_black)
         pygame.display.update()
 
+    def get_sync_measure(self):
+        curr_clocks = [value for key, value in self.fireflies_clocks.iteritems()]
+        return mean(curr_clocks), std(curr_clocks)
+
     # To start the simpy simulation
     def start_simulation(self):
-        while self.time < self.until:
-            # Update the clocks
-            self.__update_firefly_clocks()
+        with open("log.csv", 'a+') as f:
+            f.write("iteration,mean,std,num\n")
+            while self.time < self.until:
+                # Update the clocks
+                num_flashed = self.__update_firefly_clocks()
 
-            # Wall-clock time between every simulation step
-            sleep(0.1)
+                # Wall-clock time between every simulation step
+                sleep(0.1)
 
-            # Turn off the lights of the fireflies
-            self.space.fill(const_black)  # Set the background color as black
-            pygame.display.update()
+                # Turn off the lights of the fireflies
+                self.space.fill(const_black)  # Set the background color as black
+                pygame.display.update()
 
-            # Increment the time
-            self.time += 1
+                # Increment the time
+                self.time += 1
+
+                curr_mean, curr_std = self.get_sync_measure()
+                f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, num_flashed))
 
     # Exit the simulation
     @staticmethod
