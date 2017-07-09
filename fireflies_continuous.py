@@ -1,107 +1,123 @@
 import pygame
-from random import sample, randint, randrange
+from random import sample, randint
 from math import sqrt
-from time import sleep
+from time import sleep, strftime
 from numpy import mean, std
 
-const_black = (0, 0, 0)
-const_white = (255, 255, 255)
+black = (0, 0, 0)
+white = (255, 255, 255)
+
+
+class Firefly:
+    def __init__(self, x, y, period):
+        self.x = x
+        self.y = y
+        self.period = period
+        self.clock = randint(1, self.period)
+        self.last_nudged_at = 0
+        self.neighbors = []
+
+    def nudge_clock(self, nudge):
+        if self.clock >= (self.period / 2):
+            self.clock += nudge
+        else:
+            self.clock -= nudge
+
+    def set_last_nudged_at(self, sim_time):
+        self.last_nudged_at = sim_time
+
+    # Private method to light up the firefly (the display needs to be updated after this is called)
+    def light_up(self, game_display):
+        for x in range(self.x - 3, self.x + 3):
+            for y in range(self.y - 3, self.y + 3):
+                game_display.set_at((abs(x), abs(y)), white)
+
+    # Private method to turn off the firefly (the display needs to be updated after this is called)
+    def light_off(self, game_display):
+        for x in range(self.x - 3, self.x + 3):
+            for y in range(self.y - 3, self.y + 3):
+                game_display.set_at((abs(x), abs(y)), black)
 
 
 class FirefliesSimulation:
     def __init__(self, number_of_fireflies, period=50, nudge=15, neighbor_distance=50, until=10000000):
         # Save the parameters of the simulation
+        self.canvas_length = 800                # Default is 800
+        self.canvas_width = 800                 # Default is 800
         self.time = 0
         self.until = until
         self.n = number_of_fireflies
-        self.p = period
-        # self.blink_duration = 1
-        self.canvas_length = 800                # Default is 1600
-        self.canvas_width = 800                 # Default is 800
-        self.nudge_duration = nudge
-        self.neighbor_distance = neighbor_distance
-        self.fireflies_clocks = {}
-        self.neighbors = {}
-        self.last_nudged_at = {}
+        self.fireflies = []
 
-        # Initialize the positions of fireflies
+        self.neighbor_distance = neighbor_distance
+        self.nudge_duration = nudge
+
+        # Sample the positions of the fireflies
         xs = sample(range(self.canvas_length), self.n)
         ys = sample(range(self.canvas_width), self.n)
-        self.fireflies_positions = zip(xs, ys)
 
-        # Initialize the neighbors dictionary
-        for x, y in self.fireflies_positions:
-            self.neighbors[(x, y)] = []
-        for x1, y1 in self.fireflies_positions:
-            for x2, y2 in self.fireflies_positions:
-                if (x1, y1) != (x2, y2) and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
-                    self.neighbors[(x1, y1)].append((x2, y2))
-        neighbor_counts = [len(self.neighbors[i]) for i in self.neighbors]
-        print "Average neighbors:", sum(neighbor_counts) / float(len(neighbor_counts))
+        # Create the firefly objects and store them
+        for n in range(self.n):
+            self.fireflies.append(Firefly(x=xs[n], y=ys[n], period=period))
 
-        # Initialize time of every firefly
-        for x, y in self.fireflies_positions:
-            self.fireflies_clocks[(x, y)] = randint(1, self.p)
-            self.last_nudged_at[(x, y)] = 0
+        # Populate their neighbors
+        for firefly1 in self.fireflies:
+            for firefly2 in self.fireflies:
+                x1 = firefly1.x
+                y1 = firefly1.y
+                x2 = firefly2.x
+                y2 = firefly2.y
+                if firefly1 != firefly2 and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
+                    firefly1.neighbors.append(firefly2)
 
         # Initialize pygame library
         pygame.init()
         self.space = pygame.display.set_mode((self.canvas_length, self.canvas_width))
         pygame.display.set_caption('Fireflies')
-        self.space.fill(const_black)        # Set the background color as black
+        self.space.fill(black)        # Set the background color as black
 
     # Private method to update firefly clocks
     def __update_firefly_clocks(self):
         flash_counter = 0
-        for x, y in self.fireflies_positions:
+        for firefly in self.fireflies:
             # Increment the clock
-            self.fireflies_clocks[(x, y)] += 1
+            firefly.clock += 1
+
             # If the firefly's clock reached period, it's time to shine
-            if self.fireflies_clocks[(x, y)] > self.p:
+            if firefly.clock > firefly.period:
                 flash_counter += 1
+
                 # Spread the light (will be turned off outside this function)
-                self.__light_up_firefly(self.space, x, y)
+                firefly.light_up(self.space)
 
                 # Nudge every neighbor that is not nudged at this time step
-                for neighbor in self.neighbors[(x, y)]:
-                    if self.last_nudged_at[neighbor] != self.time:
-                        if self.fireflies_clocks[neighbor] >= (self.p / 2):
-                            self.fireflies_clocks[neighbor] += self.nudge_duration
-                        else:
-                            self.fireflies_clocks[neighbor] -= self.nudge_duration
-                        self.last_nudged_at[neighbor] = self.time
+                for neighbor in firefly.neighbors:
+                    if neighbor.last_nudged_at != self.time:
+                        neighbor.nudge_clock(self.nudge_duration)
+                        neighbor.set_last_nudged_at(self.time)
 
                 # Reset the clock
-                self.fireflies_clocks[(x, y)] = 0
+                firefly.clock = 0
 
-            if self.fireflies_clocks[(x, y)] < 0:
-                self.fireflies_clocks[(x, y)] = 0
+            if firefly.clock < 0:
+                firefly.clock = 0
 
         pygame.display.update()
         return flash_counter
 
-    # Private method to light up the firefly
-    @staticmethod
-    def __light_up_firefly(game_display, location_x, location_y):
-        for x in range(location_x - 3, location_x + 3):
-            for y in range(location_y - 3, location_y + 3):
-                game_display.set_at((abs(x), abs(y)), const_white)
-
-    # Private method to turn off the firefly
-    @staticmethod
-    def __turn_off_firefly(game_display, location_x, location_y):
-        for x in range(location_x - 3, location_x + 3):
-            for y in range(location_y - 3, location_y + 3):
-                game_display.set_at((abs(x), abs(y)), const_black)
-        pygame.display.update()
-
     def get_sync_measure(self):
-        curr_clocks = [value for key, value in self.fireflies_clocks.iteritems()]
+        curr_clocks = [firefly.clock for firefly in self.fireflies]
         return mean(curr_clocks), std(curr_clocks)
 
     # To start the simpy simulation
     def start_simulation(self):
-        with open("log.csv", 'a+') as f:
+        filename = "logs/log__" + strftime("%d%m%Y_%H%M%S") + ".csv"
+        param_string = "fireflies:{0}, neighbor distance:{1}, nudge:{2}\n".format(
+            self.n, self.neighbor_distance, self.nudge_duration
+        )
+        with open(filename, 'a+') as f:
+            f.write(param_string)
+            f.write("---------------------------------------------------\n")
             f.write("iteration,mean,std,num\n")
             while self.time < self.until:
                 # Update the clocks
@@ -111,7 +127,7 @@ class FirefliesSimulation:
                 sleep(0.1)
 
                 # Turn off the lights of the fireflies
-                self.space.fill(const_black)  # Set the background color as black
+                self.space.fill(black)  # Set the background color as black
                 pygame.display.update()
 
                 # Increment the time
@@ -119,6 +135,7 @@ class FirefliesSimulation:
 
                 curr_mean, curr_std = self.get_sync_measure()
                 f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, num_flashed))
+                f.flush()
 
     # Exit the simulation
     @staticmethod
