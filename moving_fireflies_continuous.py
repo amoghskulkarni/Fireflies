@@ -88,11 +88,10 @@ class FirefliesSimulation:
                     if neighbor.last_nudged_at != self.time:
                         neighbor.nudge_clock(self.nudge_duration)
                         neighbor.set_last_nudged_at(self.time)
+                    if neighbor.clock < 0:
+                        neighbor.clock = 0
 
                 # Reset the clock
-                firefly.clock = 0
-
-            if firefly.clock < 0:
                 firefly.clock = 0
 
         pygame.display.update()
@@ -132,7 +131,7 @@ class FirefliesSimulation:
                 firefly.x = new_x
                 firefly.y = new_y
 
-    # # Private method to update firefly neighbors
+    # Private method to update firefly neighbors
     def __update_firefly_neighbors(self):
         for firefly in self.fireflies:
             firefly.neighbors = []
@@ -145,6 +144,10 @@ class FirefliesSimulation:
                 y2 = firefly2.y
                 if firefly1 != firefly2 and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
                     firefly1.neighbors.append(firefly2)
+
+    def __move_fireflies(self):
+        self.__update_firefly_positions()
+        self.__update_firefly_neighbors()
 
     # To start the simpy simulation
     def start_simulation(self):
@@ -161,15 +164,14 @@ class FirefliesSimulation:
                 num_flashed = self.__update_firefly_clocks()
 
                 # Wall-clock time between every simulation step
-                self.wait()
+                self.__wait()
 
                 # Turn off the lights of the fireflies
                 self.space.fill(black)  # Set the background color as black
                 pygame.display.update()
 
                 if self.time % 10 == 0:
-                    self.__update_firefly_positions()
-                    self.__update_firefly_neighbors()
+                    self.__move_fireflies()
 
                 # Increment the time
                 self.time += 1
@@ -185,7 +187,7 @@ class FirefliesSimulation:
 
     # Duration of every simulation step
     @staticmethod
-    def wait():
+    def __wait():
         sleep(0.1)
 
     # Exit the simulation
