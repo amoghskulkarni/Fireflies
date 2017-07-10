@@ -184,9 +184,6 @@ class FirefliesSimulation:
                 self.space.fill(black)  # Set the background color as black
                 pygame.display.update()
 
-                # if self.time % 10 == 0:
-                #     self.__move_fireflies()
-
                 # Increment the time
                 self.time += 1
 
