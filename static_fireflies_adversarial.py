@@ -20,6 +20,10 @@ class Firefly:
     def set_last_nudged_at(self, sim_time):
         self.last_nudged_at = sim_time
 
+    # Needs to be implemented in the child classes
+    def nudge_clock(self, nudge):
+        raise NotImplementedError
+
     # Private method to light up the firefly (the display needs to be updated after this is called)
     def light_up(self, game_display):
         for x in range(self.x - 3, self.x + 3):
