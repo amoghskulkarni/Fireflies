@@ -78,32 +78,39 @@ class FirefliesSimulation:
 
     # Private method to update firefly clocks
     def __update_firefly_clocks(self):
-        flash_counter = 0
         for firefly in self.fireflies:
             # Increment the clock
             firefly.clock += 1
 
+    # Private method to make the fireflies flash
+    def __flash_fireflies(self):
+        flashed = []
+        for firefly in self.fireflies:
             # If the firefly's clock reached period, it's time to shine
-            if firefly.clock > firefly.period:
-                flash_counter += 1
-
+            if firefly.clock >= firefly.period:
                 # Spread the light (will be turned off outside this function)
                 firefly.light_up(self.space)
-
-                # Nudge every neighbor that is not nudged at this time step
-                for neighbor in firefly.neighbors:
-                    if neighbor.last_nudged_at != self.time:
-                        neighbor.nudge_clock(self.nudge_duration)
-                        neighbor.set_last_nudged_at(self.time)
 
                 # Reset the clock
                 firefly.clock = 0
 
-            if firefly.clock < 0:
-                firefly.clock = 0
+                flashed.append(firefly)
 
         pygame.display.update()
-        return flash_counter
+        return flashed
+
+    # Private method to nudge the clocks
+    def __do_local_communication(self, flashed):
+        for firefly in flashed:
+            # Nudge every neighbor that is not nudged at this time step
+            for neighbor in firefly.neighbors:
+                if neighbor.last_nudged_at != self.time:
+                    neighbor.nudge_clock(self.nudge_duration)
+
+                    if neighbor.clock < 0:
+                        neighbor.clock = 0
+
+                    neighbor.set_last_nudged_at(self.time)
 
     def get_sync_measure(self):
         curr_clocks = [firefly.clock for firefly in self.fireflies]
@@ -121,7 +128,13 @@ class FirefliesSimulation:
             f.write("iteration,mean,std,num\n")
             while self.time < self.until:
                 # Update the clocks
-                num_flashed = self.__update_firefly_clocks()
+                self.__update_firefly_clocks()
+
+                # Make the fireflies glow
+                flashed = self.__flash_fireflies()
+
+                # Do the local communication i.e. nudge the clocks
+                self.__do_local_communication(flashed)
 
                 # Wall-clock time between every simulation step
                 sleep(0.1)
@@ -134,7 +147,7 @@ class FirefliesSimulation:
                 self.time += 1
 
                 curr_mean, curr_std = self.get_sync_measure()
-                f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, num_flashed))
+                f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, len(flashed)))
                 f.flush()
 
     # Exit the simulation

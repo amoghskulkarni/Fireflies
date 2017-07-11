@@ -71,31 +71,40 @@ class FirefliesSimulation:
 
     # Private method to update firefly clocks
     def __update_firefly_clocks(self):
-        flash_counter = 0
         for firefly in self.fireflies:
             # Increment the clock
             firefly.clock += 1
 
+    # Private method to make the fireflies flash
+    # This method returns the references of fireflies which flashed in this simulation time step
+    def __flash_fireflies(self):
+        flashed = []
+        for firefly in self.fireflies:
             # If the firefly's clock reached period, it's time to shine
-            if firefly.clock > firefly.period:
-                flash_counter += 1
-
+            if firefly.clock >= firefly.period:
                 # Spread the light (will be turned off outside this function)
                 firefly.light_up(self.space)
-
-                # Nudge every neighbor that is not nudged at this time step
-                for neighbor in firefly.neighbors:
-                    if neighbor.last_nudged_at != self.time:
-                        neighbor.nudge_clock(self.nudge_duration)
-                        neighbor.set_last_nudged_at(self.time)
-                    if neighbor.clock < 0:
-                        neighbor.clock = 0
 
                 # Reset the clock
                 firefly.clock = 0
 
+                flashed.append(firefly)
+
         pygame.display.update()
-        return flash_counter
+        return flashed
+
+    # Private method to nudge the clocks
+    def __do_local_communication(self, flashed):
+        for firefly in flashed:
+            # Nudge every neighbor that is not nudged at this time step
+            for neighbor in firefly.neighbors:
+                if neighbor.last_nudged_at != self.time:
+                    neighbor.nudge_clock(self.nudge_duration)
+
+                    if neighbor.clock < 0:
+                        neighbor.clock = 0
+
+                    neighbor.set_last_nudged_at(self.time)
 
     # Private method to update firefly positions
     # This will try to move the firefly to a new position,
@@ -103,6 +112,7 @@ class FirefliesSimulation:
     def __update_firefly_positions(self):
         x_factor = int(self.canvas_length / 200)
         y_factor = int(self.canvas_width / 200)
+        moved = 0
         for firefly in self.fireflies:
             old_x = firefly.x
             old_y = firefly.y
@@ -130,6 +140,8 @@ class FirefliesSimulation:
                 # print "({0}, {1}) changed position to ({2}, {3})".format(old_x, old_y, new_x, new_y)
                 firefly.x = new_x
                 firefly.y = new_y
+                moved += 1
+        print "{0} fireflies moved @{1}".format(moved, self.time)
 
     # Private method to update firefly neighbors
     def __update_firefly_neighbors(self):
@@ -161,7 +173,13 @@ class FirefliesSimulation:
             f.write("iteration,mean,std,num\n")
             while self.time < self.until:
                 # Update the clocks
-                num_flashed = self.__update_firefly_clocks()
+                self.__update_firefly_clocks()
+
+                # Make the fireflies glow
+                flashed = self.__flash_fireflies()
+
+                # Do the local communication i.e. nudge the clocks of flashed
+                self.__do_local_communication(flashed)
 
                 # Wall-clock time between every simulation step
                 self.__wait()
@@ -177,7 +195,7 @@ class FirefliesSimulation:
                 self.time += 1
 
                 curr_mean, curr_std = self.get_sim_stats()
-                f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, num_flashed))
+                f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, len(flashed)))
                 f.flush()
 
     # Get simulation stats
