@@ -79,6 +79,9 @@ class FirefliesSimulation:
         # Populate their neighbors
         self.__update_firefly_neighbors()
 
+        # Placeholder for space
+        self.space = None
+
     def __visualization_init(self):
         # Initialize pygame library
         pygame.init()

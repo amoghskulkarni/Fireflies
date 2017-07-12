@@ -1,5 +1,5 @@
-# from static_fireflies_adversarial import FirefliesSimulation
-from moving_fireflies_adversarial import FirefliesSimulation
+from static_fireflies_adversarial import FirefliesSimulation
+# from moving_fireflies_adversarial import FirefliesSimulation
 # from static_fireflies import FirefliesSimulation
 # from moving_fireflies import FirefliesSimulation
 
