@@ -69,6 +69,7 @@ class FirefliesSimulation:
                 if firefly1 != firefly2 and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
                     firefly1.neighbors.append(firefly2)
 
+    def __visualization_init(self):
         # Initialize pygame library
         pygame.init()
         self.space = pygame.display.set_mode((self.canvas_length, self.canvas_width))
@@ -87,9 +88,6 @@ class FirefliesSimulation:
         for firefly in self.fireflies:
             # If the firefly's clock reached period, it's time to shine
             if firefly.clock >= firefly.period:
-                # Spread the light (will be turned off outside this function)
-                firefly.light_up(self.space)
-
                 # Reset the clock
                 firefly.clock = 0
 
@@ -97,6 +95,12 @@ class FirefliesSimulation:
 
         pygame.display.update()
         return flashed
+
+    # Private method to make the flashed fireflies visualize
+    def __visualize_flashed_fireflies(self, flashed):
+        for firefly in flashed:
+            # Spread the light (will be turned off outside this function)
+            firefly.light_up(self.space)
 
     # Private method to nudge the clocks
     def __do_local_communication(self, flashed):
@@ -111,16 +115,17 @@ class FirefliesSimulation:
 
                     neighbor.set_last_nudged_at(self.time)
 
-    def get_sync_measure(self):
-        curr_clocks = [firefly.clock for firefly in self.fireflies]
-        return mean(curr_clocks), std(curr_clocks)
-
-    # To start the simpy simulation
-    def start_simulation(self, until=10000000):
+    # To start the simulation
+    def start_simulation(self, until=10000000, visualize=True):
         filename = "logs/log__" + strftime("%d%m%Y_%H%M%S") + ".csv"
-        param_string = "fireflies:{0}, neighbor distance:{1}, nudge:{2}\n".format(
+        param_string = "total fireflies:{0}, neighbor distance:{1}, nudge:{2}\n".format(
             self.n, self.neighbor_distance, self.nudge_duration
         )
+
+        # Init the visualization
+        if visualize:
+            self.__visualization_init()
+
         with open(filename, 'a+') as f:
             f.write(param_string)
             f.write("---------------------------------------------------\n")
@@ -129,25 +134,40 @@ class FirefliesSimulation:
                 # Update the clocks
                 self.__update_firefly_clocks()
 
-                # Make the fireflies glow
+                # Make the fireflies flash
                 flashed = self.__flash_fireflies()
+
+                # Make them appear on the canvas
+                if visualize:
+                    self.__visualize_flashed_fireflies(flashed)
 
                 # Do the local communication i.e. nudge the clocks
                 self.__do_local_communication(flashed)
 
                 # Wall-clock time between every simulation step
-                sleep(0.1)
+                self.__wait()
 
                 # Turn off the lights of the fireflies
-                self.space.fill(black)  # Set the background color as black
-                pygame.display.update()
+                if visualize:
+                    self.space.fill(black)  # Set the background color as black
+                    pygame.display.update()
 
                 # Increment the time
                 self.time += 1
 
-                curr_mean, curr_std = self.get_sync_measure()
+                curr_mean, curr_std = self.get_sim_stats()
                 f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, len(flashed)))
                 f.flush()
+
+    # Get simulation stats
+    def get_sim_stats(self):
+        curr_clocks = [firefly.clock for firefly in self.fireflies]
+        return mean(curr_clocks), std(curr_clocks)
+
+    # Duration of every simulation step
+    @staticmethod
+    def __wait():
+        sleep(0.1)
 
     # Exit the simulation
     @staticmethod
