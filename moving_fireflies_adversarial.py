@@ -180,12 +180,13 @@ class FirefliesSimulation:
                 # Do the local communication i.e. nudge the clocks
                 self.__do_local_communication(flashed)
 
-                # Wall-clock time between every simulation step
-                self.__wait()
-
                 # Turn off the lights of the fireflies
                 if visualize:
-                    self.space.fill(black)  # Set the background color as black
+                    # Wall-clock time between every simulation step
+                    self.__wait()
+
+                    # Set the background color as black
+                    self.space.fill(black)
                     pygame.display.update()
 
                 if self.time % 10 == 0:
