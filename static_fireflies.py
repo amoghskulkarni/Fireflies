@@ -30,14 +30,7 @@ class FirefliesSimulation:
             self.fireflies.append(Firefly(x=xs[n], y=ys[n], period=period))
 
         # Populate their neighbors
-        for firefly1 in self.fireflies:
-            for firefly2 in self.fireflies:
-                x1 = firefly1.x
-                y1 = firefly1.y
-                x2 = firefly2.x
-                y2 = firefly2.y
-                if firefly1 != firefly2 and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
-                    firefly1.neighbors.append(firefly2)
+        self.__update_firefly_neighbors()
 
     def __visualization_init(self):
         # Initialize pygame library
@@ -83,6 +76,20 @@ class FirefliesSimulation:
                         neighbor.clock = 0
 
                     neighbor.set_last_nudged_at(self.time)
+
+    # Private method to update firefly neighbors
+    def __update_firefly_neighbors(self):
+        for firefly in self.fireflies:
+            firefly.neighbors = []
+
+        for firefly1 in self.fireflies:
+            for firefly2 in self.fireflies:
+                x1 = firefly1.x
+                y1 = firefly1.y
+                x2 = firefly2.x
+                y2 = firefly2.y
+                if firefly1 != firefly2 and sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) < self.neighbor_distance:
+                    firefly1.neighbors.append(firefly2)
 
     # To start the simulation
     def start_simulation(self, until=10000000, visualize=True):

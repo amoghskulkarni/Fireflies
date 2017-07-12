@@ -1,40 +1,12 @@
 import pygame
-from random import sample, randint, random
+from random import sample, randint
 from math import sqrt
 from time import sleep, strftime
 from numpy import mean, std
+from lib.firefly import Firefly
 
 black = (0, 0, 0)
 white = (255, 255, 255)
-
-
-class Firefly:
-    def __init__(self, x, y, period):
-        self.x = x
-        self.y = y
-        self.period = period
-        self.clock = randint(1, self.period)
-        self.last_nudged_at = 0
-        self.neighbors = []
-
-    def set_last_nudged_at(self, sim_time):
-        self.last_nudged_at = sim_time
-
-    # Needs to be implemented in the child classes
-    def nudge_clock(self, nudge):
-        raise NotImplementedError
-
-    # Private method to light up the firefly (the display needs to be updated after this is called)
-    def light_up(self, game_display):
-        for x in range(self.x - 3, self.x + 3):
-            for y in range(self.y - 3, self.y + 3):
-                game_display.set_at((abs(x), abs(y)), white)
-
-    # Private method to turn off the firefly (the display needs to be updated after this is called)
-    def light_off(self, game_display):
-        for x in range(self.x - 3, self.x + 3):
-            for y in range(self.y - 3, self.y + 3):
-                game_display.set_at((abs(x), abs(y)), black)
 
 
 class NonAdversarialFirefly(Firefly):
@@ -124,40 +96,6 @@ class FirefliesSimulation:
 
                     neighbor.set_last_nudged_at(self.time)
 
-    # Private method to update firefly positions
-    # This will try to move the firefly to a new position,
-    # but won't move it if there's one already there
-    def __update_firefly_positions(self):
-        x_factor = int(self.canvas_length / 200)
-        y_factor = int(self.canvas_width / 200)
-        for firefly in self.fireflies:
-            old_x = firefly.x
-            old_y = firefly.y
-            x_op = randint(0, 1)
-            y_op = randint(0, 1)
-            if x_op == 1:
-                # x + x-factor
-                new_x = old_x + x_factor if old_x + x_factor <= self.canvas_length else old_x
-            else:
-                # x - x-factor
-                new_x = old_x - x_factor if old_x - x_factor >= 0 else old_x
-            if y_op == 1:
-                # y + y-factor
-                new_y = old_y + y_factor if old_y + y_factor <= self.canvas_width else old_y
-            else:
-                # y - y-factor
-                new_y = old_y - y_factor if old_y - y_factor >= 0 else old_y
-            other_firefly_present = False
-            for other_firefly in self.fireflies:
-                # If there's some other firefly in the new position, stay where you are
-                if other_firefly.x == new_x and other_firefly.y == new_y:
-                    other_firefly_present = True
-                    break
-            if not other_firefly_present:
-                # print "({0}, {1}) changed position to ({2}, {3})".format(old_x, old_y, new_x, new_y)
-                firefly.x = new_x
-                firefly.y = new_y
-
     # Private method to update firefly neighbors
     def __update_firefly_neighbors(self):
         for firefly in self.fireflies:
@@ -171,10 +109,6 @@ class FirefliesSimulation:
                 y2 = firefly2.y
                 if firefly1 != firefly2 and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
                     firefly1.neighbors.append(firefly2)
-
-    def __move_fireflies(self):
-        self.__update_firefly_positions()
-        self.__update_firefly_neighbors()
 
     # To start the simulation
     def start_simulation(self, until=10000000, visualize=True):

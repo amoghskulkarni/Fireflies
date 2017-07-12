@@ -5,4 +5,4 @@ from static_fireflies_adversarial import FirefliesSimulation
 
 
 ff_sim = FirefliesSimulation(period=60, nudge=10, neighbor_distance=100000)
-ff_sim.start_simulation(visualize=False)
+ff_sim.start_simulation()
