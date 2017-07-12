@@ -40,13 +40,13 @@ class Firefly:
 
 
 class FirefliesSimulation:
-    def __init__(self, number_of_fireflies, period=50, nudge=15, neighbor_distance=50, until=10000000):
+    def __init__(self, n_fireflies=100, period=50, nudge=15, neighbor_distance=50, until=10000000):
         # Save the parameters of the simulation
         self.canvas_length = 800                # Default is 800
         self.canvas_width = 800                 # Default is 800
         self.time = 0
         self.until = until
-        self.n = number_of_fireflies
+        self.n = n_fireflies
         self.fireflies = []
 
         self.neighbor_distance = neighbor_distance

@@ -1,4 +1,5 @@
-from static_fireflies_adversarial import FirefliesSimulation
+# from static_fireflies_adversarial import FirefliesSimulation
+from static_fireflies import FirefliesSimulation
 
-ff_sim = FirefliesSimulation(100, period=30, nudge=5, neighbor_distance=100)
+ff_sim = FirefliesSimulation(period=60, nudge=10, neighbor_distance=100000)
 ff_sim.start_simulation()

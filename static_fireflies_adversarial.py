@@ -54,13 +54,14 @@ class AdversarialFirefly(Firefly):
 
 
 class FirefliesSimulation:
-    def __init__(self, number_of_fireflies, period=50, nudge=15, neighbor_distance=50, until=10000000):
+    def __init__(self, n_fireflies=100, n_ad_fireflies=5, period=50, nudge=15, neighbor_distance=50, until=10000000):
         # Save the parameters of the simulation
         self.canvas_length = 800                # Default is 800
         self.canvas_width = 800                 # Default is 800
         self.time = 0
         self.until = until
-        self.n = number_of_fireflies
+        self.n = n_fireflies
+        self.n_ad = n_ad_fireflies
         self.fireflies = []
 
         self.neighbor_distance = neighbor_distance
@@ -71,11 +72,9 @@ class FirefliesSimulation:
         ys = sample(range(self.canvas_width), self.n)
 
         # Create the (normal and adversarial) firefly objects and store them
-        n_adversarial = 5
-        for n in range(self.n - n_adversarial):
+        for n in range(self.n - self.n_ad):
             self.fireflies.append(NonAdversarialFirefly(x=xs[n], y=ys[n], period=period))
-
-        for n in range(n_adversarial):
+        for n in range(self.n_ad):
             self.fireflies.append(AdversarialFirefly(x=xs[-1 * n], y=ys[-1 * n], period=period))
 
         # Populate their neighbors
@@ -178,8 +177,8 @@ class FirefliesSimulation:
     # To start the simulation
     def start_simulation(self):
         filename = "logs/log__" + strftime("%d%m%Y_%H%M%S") + ".csv"
-        param_string = "fireflies:{0}, neighbor distance:{1}, nudge:{2}\n".format(
-            self.n, self.neighbor_distance, self.nudge_duration
+        param_string = "total fireflies:{0}, adversarial fireflies:{1} neighbor distance:{2}, nudge:{3}\n".format(
+            self.n, self.n_ad, self.neighbor_distance, self.nudge_duration
         )
         with open(filename, 'a+') as f:
             f.write(param_string)
