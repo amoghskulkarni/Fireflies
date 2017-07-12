@@ -40,12 +40,11 @@ class Firefly:
 
 
 class FirefliesSimulation:
-    def __init__(self, n_fireflies=100, period=50, nudge=15, neighbor_distance=50, until=10000000):
+    def __init__(self, n_fireflies=100, period=50, nudge=15, neighbor_distance=50):
         # Save the parameters of the simulation
         self.canvas_length = 800                # Default is 800
         self.canvas_width = 800                 # Default is 800
         self.time = 0
-        self.until = until
         self.n = n_fireflies
         self.fireflies = []
 
@@ -117,7 +116,7 @@ class FirefliesSimulation:
         return mean(curr_clocks), std(curr_clocks)
 
     # To start the simpy simulation
-    def start_simulation(self):
+    def start_simulation(self, until=10000000):
         filename = "logs/log__" + strftime("%d%m%Y_%H%M%S") + ".csv"
         param_string = "fireflies:{0}, neighbor distance:{1}, nudge:{2}\n".format(
             self.n, self.neighbor_distance, self.nudge_duration
@@ -126,7 +125,7 @@ class FirefliesSimulation:
             f.write(param_string)
             f.write("---------------------------------------------------\n")
             f.write("iteration,mean,std,num\n")
-            while self.time < self.until:
+            while self.time < until:
                 # Update the clocks
                 self.__update_firefly_clocks()
 
