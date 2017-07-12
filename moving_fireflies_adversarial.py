@@ -79,9 +79,6 @@ class FirefliesSimulation:
         # Populate their neighbors
         self.__update_firefly_neighbors()
 
-        # Placeholder for space
-        self.space = None
-
     def __visualization_init(self):
         # Initialize pygame library
         pygame.init()
@@ -105,8 +102,6 @@ class FirefliesSimulation:
                 firefly.clock = 0
 
                 flashed.append(firefly)
-
-        pygame.display.update()
         return flashed
 
     # Private method to make the flashed fireflies visualize
@@ -114,6 +109,7 @@ class FirefliesSimulation:
         for firefly in flashed:
             # Spread the light (will be turned off outside this function)
             firefly.light_up(self.space)
+        pygame.display.update()
 
     # Private method to nudge the clocks
     def __do_local_communication(self, flashed):
@@ -134,6 +130,7 @@ class FirefliesSimulation:
     def __update_firefly_positions(self):
         x_factor = int(self.canvas_length / 200)
         y_factor = int(self.canvas_width / 200)
+        moved = 0
         for firefly in self.fireflies:
             old_x = firefly.x
             old_y = firefly.y
@@ -161,6 +158,8 @@ class FirefliesSimulation:
                 # print "({0}, {1}) changed position to ({2}, {3})".format(old_x, old_y, new_x, new_y)
                 firefly.x = new_x
                 firefly.y = new_y
+                moved += 1
+        print "{0} fireflies moved @{1}".format(moved, self.time)
 
     # Private method to update firefly neighbors
     def __update_firefly_neighbors(self):

@@ -86,8 +86,6 @@ class FirefliesSimulation:
                 firefly.clock = 0
 
                 flashed.append(firefly)
-
-        pygame.display.update()
         return flashed
 
     # Private method to make the flashed fireflies visualize
@@ -95,6 +93,7 @@ class FirefliesSimulation:
         for firefly in flashed:
             # Spread the light (will be turned off outside this function)
             firefly.light_up(self.space)
+        pygame.display.update()
 
     # Private method to nudge the clocks
     def __do_local_communication(self, flashed):
