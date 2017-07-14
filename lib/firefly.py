@@ -15,6 +15,10 @@ class Firefly:
         self.last_nudged_at = 0
         self.neighbors = []
 
+    def update_clock(self):
+        # Increment the clock
+        self.clock += 1
+
     def nudge_clock(self, nudge):
         if self.clock >= (self.period / 2):
             self.clock += nudge

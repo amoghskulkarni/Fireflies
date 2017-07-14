@@ -43,7 +43,7 @@ class FirefliesSimulation:
     def __update_firefly_clocks(self):
         for firefly in self.fireflies:
             # Increment the clock
-            firefly.clock += 1
+            firefly.update_clock()
 
     # Private method to make the fireflies flash
     def __flash_fireflies(self):
