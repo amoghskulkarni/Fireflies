@@ -5,6 +5,11 @@ black = (0, 0, 0)
 white = (255, 255, 255)
 
 
+class LinearFirefly(Firefly):
+    def nudge_clock(self, nudge):
+        self.clock += nudge
+
+
 class LinearFirefliesSimulation(FirefliesSimulation):
     def __init__(self, n_fireflies=100, period=50, nudge=15, neighbor_distance=50, movement=False):
         FirefliesSimulation.__init__(self, n_fireflies=n_fireflies,
@@ -18,7 +23,7 @@ class LinearFirefliesSimulation(FirefliesSimulation):
 
         # Create the firefly objects and store them
         for n in range(self.n):
-            self.fireflies.append(Firefly(x=xs[n], y=ys[n], period=period))
+            self.fireflies.append(LinearFirefly(x=xs[n], y=ys[n], period=period))
 
         # Populate their neighbors
         self.update_firefly_neighbors()

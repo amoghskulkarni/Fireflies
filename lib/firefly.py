@@ -49,17 +49,19 @@ class Firefly:
 class FirefliesSimulation:
     def __init__(self, n_fireflies=100, nudge=15, neighbor_distance=50, movement=False):
         # Save the parameters of the simulation
-        self.movement = movement
         self.canvas_length = 800                # Default is 800
         self.canvas_width = 800                 # Default is 800
-        self.time = 0
-        self.n = n_fireflies
-        self.fireflies = []
+        self.space = None
 
-        self.neighbor_distance = neighbor_distance
+        self.movement = movement
+        self.time = 0
         self.nudge_duration = nudge
 
-    def __visualization_init(self):
+        self.n = n_fireflies
+        self.fireflies = []
+        self.neighbor_distance = neighbor_distance
+
+    def visualization_init(self):
         # Initialize pygame library
         pygame.init()
         self.space = pygame.display.set_mode((self.canvas_length, self.canvas_width))
@@ -67,14 +69,14 @@ class FirefliesSimulation:
         self.space.fill(black)        # Set the background color as black
 
     # Private method to update firefly clocks
-    def __update_firefly_clocks(self):
+    def update_firefly_clocks(self):
         for firefly in self.fireflies:
             # Increment the clock
             firefly.update_clock()
 
     # Private method to make the fireflies flash
     # This method returns the references of fireflies which flashed in this simulation time step
-    def __flash_fireflies(self):
+    def flash_fireflies(self):
         flashed = []
         for firefly in self.fireflies:
             # If the firefly's clock reached period, it's time to shine
@@ -86,14 +88,14 @@ class FirefliesSimulation:
         return flashed
 
     # Private method to make the flashed fireflies visualize
-    def __visualize_flashed_fireflies(self, flashed):
+    def visualize_flashed_fireflies(self, flashed):
         for firefly in flashed:
             # Spread the light (will be turned off outside this function)
             firefly.light_up(self.space)
         pygame.display.update()
 
     # Private method to nudge the clocks
-    def __do_local_communication(self, flashed):
+    def do_local_communication(self, flashed):
         for firefly in flashed:
             # Nudge every neighbor that is not nudged at this time step
             for neighbor in firefly.neighbors:
@@ -156,7 +158,7 @@ class FirefliesSimulation:
                 if firefly1 != firefly2 and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
                     firefly1.neighbors.append(firefly2)
 
-    def __move_fireflies(self):
+    def move_fireflies(self):
         self.update_firefly_positions()
         self.update_firefly_neighbors()
 
@@ -169,7 +171,7 @@ class FirefliesSimulation:
 
         # Init the visualization
         if visualize:
-            self.__visualization_init()
+            self.visualization_init()
 
         with open(filename, 'a+') as f:
             f.write(param_string)
@@ -177,22 +179,22 @@ class FirefliesSimulation:
             f.write("iteration,mean,std,num\n")
             while self.time < until:
                 # Update the clocks
-                self.__update_firefly_clocks()
+                self.update_firefly_clocks()
 
                 # Make the fireflies flash
-                flashed = self.__flash_fireflies()
+                flashed = self.flash_fireflies()
 
                 # Make them appear on the canvas
                 if visualize:
-                    self.__visualize_flashed_fireflies(flashed)
+                    self.visualize_flashed_fireflies(flashed)
 
                 # Do the local communication i.e. nudge the clocks
-                self.__do_local_communication(flashed)
+                self.do_local_communication(flashed)
 
                 # Turn off the lights of the fireflies
                 if visualize:
                     # Wall-clock time between every simulation step
-                    self.__wait()
+                    self.wait()
 
                     # Set the background color as black
                     self.space.fill(black)
@@ -200,7 +202,7 @@ class FirefliesSimulation:
 
                 if self.movement:
                     if self.time % 10 == 0:
-                        self.__move_fireflies()
+                        self.move_fireflies()
 
                 # Increment the time
                 self.time += 1
@@ -216,7 +218,7 @@ class FirefliesSimulation:
 
     # Duration of every simulation step
     @staticmethod
-    def __wait():
+    def wait():
         sleep(0.1)
 
     # Exit the simulation

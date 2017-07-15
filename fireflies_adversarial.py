@@ -42,3 +42,9 @@ class AdversarialFirefliesSimulation(FirefliesSimulation):
 
         # Populate their neighbors
         self.update_firefly_neighbors()
+
+
+if __name__ == "__main__":
+    # Movement is off by default
+    ff_sim = AdversarialFirefliesSimulation(period=60, nudge=10, neighbor_distance=150)
+    ff_sim.start_simulation()
