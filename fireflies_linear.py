@@ -5,18 +5,7 @@ black = (0, 0, 0)
 white = (255, 255, 255)
 
 
-class StrogatzianFirefly(Firefly):
-    def nudge_clock(self, nudge):
-        # delta = (self.period + 0.1) - self.clock
-        # self.clock += (0.1 * delta * nudge)
-        self.clock += nudge
-
-    def update_clock(self):
-        delta = (self.period + 1) - self.clock
-        self.clock += (0.1 * delta)
-
-
-class StrogatzianFirefliesSimulation(FirefliesSimulation):
+class LinearFirefliesSimulation(FirefliesSimulation):
     def __init__(self, n_fireflies=100, period=50, nudge=15, neighbor_distance=50, movement=False):
         FirefliesSimulation.__init__(self, n_fireflies=n_fireflies,
                                      nudge=nudge,
@@ -29,7 +18,12 @@ class StrogatzianFirefliesSimulation(FirefliesSimulation):
 
         # Create the firefly objects and store them
         for n in range(self.n):
-            self.fireflies.append(StrogatzianFirefly(x=xs[n], y=ys[n], period=period))
+            self.fireflies.append(Firefly(x=xs[n], y=ys[n], period=period))
 
         # Populate their neighbors
         self.update_firefly_neighbors()
+
+if __name__ == "__main__":
+    # Movement is off by default
+    ff_sim = LinearFirefliesSimulation(period=60, nudge=10, neighbor_distance=150)
+    ff_sim.start_simulation()
