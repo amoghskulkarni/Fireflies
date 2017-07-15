@@ -23,7 +23,8 @@ class LinearFirefliesSimulation(FirefliesSimulation):
 
         # Create the firefly objects and store them
         for n in range(self.n):
-            self.fireflies.append(LinearFirefly(x=xs[n], y=ys[n], period=period))
+            # self.fireflies.append(LinearFirefly(x=xs[n], y=ys[n], period=period))
+            self.fireflies.append(Firefly(x=xs[n], y=ys[n], period=period))
 
         # Populate their neighbors
         self.update_firefly_neighbors()

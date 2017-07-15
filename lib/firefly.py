@@ -1,7 +1,6 @@
 # File which includes the base class for fireflies
 
 import pygame
-from random import sample, randint
 from math import sqrt
 from time import sleep, strftime
 from numpy import mean, std
@@ -163,7 +162,7 @@ class FirefliesSimulation:
         self.update_firefly_neighbors()
 
     # To start the simulation
-    def start_simulation(self, until=10000000, visualize=True):
+    def start_simulation(self, until=10000000, visualize=False):
         filename = "logs/log__" + strftime("%d%m%Y_%H%M%S") + ".csv"
         param_string = "total fireflies:{0}, neighbor distance:{1}, nudge:{2}\n".format(
             self.n, self.neighbor_distance, self.nudge_duration
@@ -210,6 +209,10 @@ class FirefliesSimulation:
                 curr_mean, curr_std = self.get_sim_stats()
                 f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, len(flashed)))
                 f.flush()
+
+                if not visualize:
+                    if self.time % 1000 == 0:
+                        print "{0}: Degree of synchronization = ...".format(self.time)
 
     # Get simulation stats
     def get_sim_stats(self):
