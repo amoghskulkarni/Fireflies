@@ -1,5 +1,5 @@
 import pygame
-from random import sample
+from random import sample, randint
 from math import sqrt
 from time import sleep, strftime
 from numpy import mean, std
@@ -11,8 +11,8 @@ white = (255, 255, 255)
 
 class StrogatzianFirefly(Firefly):
     def nudge_clock(self, nudge):
-        # delta = (self.period + 0.1) - self.clock
-        # self.clock += (0.1 * delta * nudge)
+        # delta = self.period - self.clock
+        # self.clock += (0.01 * delta * nudge)
         self.clock += nudge
 
     def update_clock(self):
@@ -52,16 +52,12 @@ class FirefliesSimulation:
 
     # Private method to update firefly clocks
     def __update_firefly_clocks(self):
-        print_clock_for = None
-        for firefly_id, firefly in enumerate(self.fireflies):
-            if firefly_id == print_clock_for:
-                print "Before update, Firefly {0} clock: {1} at simulation time {2}".format(i, firefly.clock, self.time)
+        for firefly in self.fireflies:
             # Increment the clock
             firefly.update_clock()
-            if firefly_id == print_clock_for:
-                print "After update, Firefly {0} clock: {1} at simulation time {2}".format(i, firefly.clock, self.time)
 
     # Private method to make the fireflies flash
+    # This method returns the references of fireflies which flashed in this simulation time step
     def __flash_fireflies(self):
         flashed = []
         for firefly in self.fireflies:
@@ -93,6 +89,43 @@ class FirefliesSimulation:
 
                     neighbor.set_last_nudged_at(self.time)
 
+    # Private method to update firefly positions
+    # This will try to move the firefly to a new position,
+    # but won't move it if there's one already there
+    def __update_firefly_positions(self):
+        x_factor = int(self.canvas_length / 200)
+        y_factor = int(self.canvas_width / 200)
+        moved = 0
+        for firefly in self.fireflies:
+            old_x = firefly.x
+            old_y = firefly.y
+            x_op = randint(0, 1)
+            y_op = randint(0, 1)
+            if x_op == 1:
+                # x + x-factor
+                new_x = old_x + x_factor if old_x + x_factor <= self.canvas_length else old_x
+            else:
+                # x - x-factor
+                new_x = old_x - x_factor if old_x - x_factor >= 0 else old_x
+            if y_op == 1:
+                # y + y-factor
+                new_y = old_y + y_factor if old_y + y_factor <= self.canvas_width else old_y
+            else:
+                # y - y-factor
+                new_y = old_y - y_factor if old_y - y_factor >= 0 else old_y
+            other_firefly_present = False
+            for other_firefly in self.fireflies:
+                # If there's some other firefly in the new position, stay where you are
+                if other_firefly.x == new_x and other_firefly.y == new_y:
+                    other_firefly_present = True
+                    break
+            if not other_firefly_present:
+                # print "({0}, {1}) changed position to ({2}, {3})".format(old_x, old_y, new_x, new_y)
+                firefly.x = new_x
+                firefly.y = new_y
+                moved += 1
+        # print "{0} fireflies moved @{1}".format(moved, self.time)
+
     # Private method to update firefly neighbors
     def __update_firefly_neighbors(self):
         for firefly in self.fireflies:
@@ -104,8 +137,12 @@ class FirefliesSimulation:
                 y1 = firefly1.y
                 x2 = firefly2.x
                 y2 = firefly2.y
-                if firefly1 != firefly2 and sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) < self.neighbor_distance:
+                if firefly1 != firefly2 and sqrt((x2 - x1)**2 + (y2 - y1)**2) < self.neighbor_distance:
                     firefly1.neighbors.append(firefly2)
+
+    def __move_fireflies(self):
+        self.__update_firefly_positions()
+        self.__update_firefly_neighbors()
 
     # To start the simulation
     def start_simulation(self, until=10000000, visualize=True):
@@ -144,6 +181,9 @@ class FirefliesSimulation:
                     # Set the background color as black
                     self.space.fill(black)
                     pygame.display.update()
+
+                if self.time % 10 == 0:
+                    self.__move_fireflies()
 
                 # Increment the time
                 self.time += 1
