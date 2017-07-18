@@ -31,5 +31,5 @@ class LinearFirefliesSimulation(FirefliesSimulation):
 
 if __name__ == "__main__":
     # Movement is off by default
-    ff_sim = LinearFirefliesSimulation(period=60, nudge=10, neighbor_distance=150)
+    ff_sim = LinearFirefliesSimulation(period=60, nudge=10, neighbor_distance=150, movement=True)
     ff_sim.start_simulation()

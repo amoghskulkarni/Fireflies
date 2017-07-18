@@ -206,18 +206,35 @@ class FirefliesSimulation:
                 # Increment the time
                 self.time += 1
 
-                curr_mean, curr_std = self.get_sim_stats()
-                f.write("{0},{1},{2},{3}\n".format(self.time, curr_mean, curr_std, len(flashed)))
+                curr_mean, curr_std, phase_metric = self.get_sim_stats()
+                f.write("{0},{1},{2},{3},{4}\n".format(self.time,
+                                                       curr_mean,
+                                                       curr_std,
+                                                       len(flashed),
+                                                       phase_metric))
                 f.flush()
 
                 if not visualize:
-                    if self.time % 1000 == 0:
-                        print "{0}: Degree of synchronization = ...".format(self.time)
+                    if self.time % 100 == 0:
+                        print "{0}: Degree of synchronization = {1}".format(self.time, phase_metric)
+
+                # If fully synchronized
+                if len(flashed) == self.n and phase_metric == 0:
+                    break
 
     # Get simulation stats
     def get_sim_stats(self):
+        total_phase_distance = 0
+        for firefly in self.fireflies:
+            f_clock = firefly.clock
+            for neighbor in firefly.neighbors:
+                n_clock = neighbor.clock
+                delta = abs(f_clock - n_clock)
+                # if delta > 30:
+                #     delta -= 30
+                total_phase_distance += delta
         curr_clocks = [firefly.clock for firefly in self.fireflies]
-        return mean(curr_clocks), std(curr_clocks)
+        return mean(curr_clocks), std(curr_clocks), total_phase_distance
 
     # Duration of every simulation step
     @staticmethod

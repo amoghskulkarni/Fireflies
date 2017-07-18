@@ -38,5 +38,5 @@ class StrogatzianFirefliesSimulation(FirefliesSimulation):
 if __name__ == "__main__":
     # Movement is off by default
     ff_sim = StrogatzianFirefliesSimulation(period=60, nudge=10, neighbor_distance=150)
-    ff_sim.start_simulation()
+    ff_sim.start_simulation(visualize=True)
 
